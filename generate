@@ -1,0 +1,135 @@
+#!/usr/bin/python3
+import ipaddress,sys,os,json
+sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/libs/")
+from wgManagement import wgManagement
+import ipadds
+
+def print_sitenames(wgmg):
+    print(f"Current site : ")
+    print(f"        {sitename}")
+    print()
+    print("Sites availables : ")
+    for site_file in os.listdir(wgmg.sites_path):
+        if (site_file.split(".")[len(site_file.split("."))-1] == "json"):
+            print(f"        {site_file[:-5]}")
+    print()
+
+def create_config_file(sitename,gconf,wgmg):
+    subnet = str(input("Subnet (10.40.10.0/24) : ") or "10.40.10.0/24")
+    routerip = ipadds.get_addresses(subnet,[])[0]
+    name = str(input("Server name (default_router) : ") or "default_router")
+    IP = str(input("Server public IP (185.62.2.1) : ") or "185.62.2.1")
+    port = str(input("Wireguard port (51820) : ") or "51820")
+    type = str(input("Wireguard Server os type (routeros) : ") or "routeros")
+    client_allowed_ip = []
+    while True:
+        tmp_client_allowed_ip = input("Enter a subnet accessible via the VPN (example : 192.168.1.0/24) :") or False
+        if (tmp_client_allowed_ip == False):
+            break
+        else:
+            client_allowed_ip.append(tmp_client_allowed_ip)
+    if (type == "routeros"):
+        ssh_port = str(input("Port SSH routeros (22) : ") or "22")
+        ssh_user = str(input("User SSH routeros (admin) : ") or "admin")
+        interface_name = str(input("Wireguard interface name (wireguard1) : ") or "wireguard1")
+        gconf["server"]["type_info"]["ssh_port"] = ssh_port
+        gconf["server"]["type_info"]["ssh_user"] = ssh_user
+        gconf["server"]["type_info"]["interface_name"] = interface_name
+    gconf["subnet"] = subnet
+    gconf["server"]["name"] = name
+    gconf["server"]["IP"] = IP
+    gconf["server"]["port"] = port
+    gconf["server"]["type"] = type
+    gconf["client_allowed_ip"] = client_allowed_ip
+    gconf["used_ips"][routerip] = name
+    wgmg.create_site(gconf,sitename)
+    wgmg.set_current_sitename(sitename)
+    wgmg.generate_wireguard_cert(name)
+       
+def print_wireguard_exported_conf(arglist,wgmg):
+    if os.path.exists(f"{wgmg.exports_path}/{sitename}/{arglist[2]}.conf"):
+        with open(f"{wgmg.exports_path}/{sitename}/{arglist[2]}.conf", "r") as exportedfile:
+            conf = exportedfile.read()
+        print(conf)
+    else:
+        print(f"File {arglist[2]}.conf don't exist")
+
+def print_wireguard_values(wgmg):
+    site_values = wgmg.json_file_read(f"{wgmg.sites_path}/{sitename}.json")
+    print("SITE CONFIGURATION :")
+    print(json.dumps(site_values,indent = 4))
+    for ip in site_values["used_ips"]:
+        cert_values = wgmg.json_file_read(f"{wgmg.certs_path}/{sitename}/{site_values['used_ips'][ip]}.json")
+        print(f"KEY SET FOR {site_values['used_ips'][ip]} :")
+        print(json.dumps(cert_values,indent = 4))
+
+def print_option():
+    print(f"        generate-cert [name]")
+    print(f"        delete-cert [name]")
+    print(f"        generate-conf")
+    print(f"        deploy-conf [password]")
+    print(f"        print-exported-conf [name]")
+    print(f"        print-global-conf")
+    print(f"        create_site [name]")
+    print(f"        delete_site [name]")
+    print(f"        change_current_site [name]")
+    print(f"        print_sitenames")
+
+def interactive(wgmg):
+    print(f"Wireguard sites managers tools ")
+    print(f"Type \"exit\" to quit")
+    while True:
+        globals()["sitename"] = wgmg.get_current_sitename()
+        print()
+        print(f"#### Site : {sitename} ####")
+        print(f"Type \"help\" for command list")
+        print()
+        cmd = str(input("Enter command : "))
+        if cmd == "help":
+            print()
+            print("Commands list :")
+            print_option()
+        elif cmd == "exit":
+            break
+        elif cmd != "interactive":
+            router([""]+cmd.split())
+
+def router(arglist,wgmg):
+    if arglist[1] == "interactive" :
+        interactive(wgmg)
+    if arglist[1] == "generate-cert" :
+        wgmg.generate_wireguard_cert(arglist[2])
+        wgmg.add_wireguard_host(arglist[2])
+    elif arglist[1] == "generate-conf":
+        wgmg.generate_conf_files()
+    elif arglist[1] == "delete-cert":
+        wgmg.delete_wireguard_cert(arglist[2])
+        wgmg.del_wireguard_host(arglist[2])
+    elif arglist[1] == "deploy-conf":
+        wgmg.deploy_wireguard_configuration_routeros(arglist[2])
+    elif arglist[1] == "print_sitenames":
+        print_sitenames(wgmg)
+    elif arglist[1] == "create_site":
+        create_config_file(arglist[2],wgmg.get_sitetemplate(),wgmg)
+    elif arglist[1] == "delete_site":
+        wgmg.delete_site(arglist[2])
+    elif arglist[1] == "change_current_site" :
+        wgmg.set_current_sitename(arglist[2])
+    elif arglist[1] == "print-global-conf":
+        print_wireguard_values(wgmg)
+    elif arglist[1] == "print-exported-conf":
+        print_wireguard_exported_conf(arglist,wgmg)
+
+def launcher(wgmg):
+    listcmd = {"generate-cert":3,"delete-cert":3,"generate-conf":2,"deploy-conf":3,"print-exported-conf":3,"print-global-conf":2,"create_site":3,"delete_site":3,"change_current_site":3,"print_sitenames":2,"interactive":2}
+    if len(sys.argv) < 2 or not sys.argv[1] in listcmd or not len(sys.argv)==listcmd[sys.argv[1]]:
+        print(f"Usage: {__file__.split('/')[len(__file__.split('/'))-1]} OBJECT [name]")
+        print(f"OBJECT :")
+        print(f"        interactive")
+        print_option()
+    else:
+        router(sys.argv,wgmg)
+
+wgmg = wgManagement()
+sitename = wgmg.get_current_sitename()
+launcher(wgmg)
