@@ -1,4 +1,4 @@
-# BASIC_WG_SITES_MANAGER
+# WIREGUARDs-MANAGER
 
 Dépendances : 
 
