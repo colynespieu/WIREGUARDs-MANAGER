@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import ipaddress,sys,os,json
+import ipaddress,sys,os,json,getpass
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/libs/")
 from wgManagement import wgManagement
 import ipadds
@@ -63,6 +63,13 @@ def print_wireguard_values(wgmg):
         print(f"KEY SET FOR {site_values['used_ips'][ip]} :")
         print(json.dumps(cert_values,indent = 4))
 
+def deploy_wireguard_configuration(wgmg):
+    site_values = wgmg.json_file_read(f"{wgmg.sites_path}/{sitename}.json")
+    if (site_values["server"]["type"] == "routeros"):
+        wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS password : "))
+    else:
+        print(f"No deployment for type : {site_values['server']['type']}")
+
 def print_option():
     print(f"        generate-cert [name]")
     print(f"        delete-cert [name]")
@@ -92,7 +99,7 @@ def interactive(wgmg):
         elif cmd == "exit":
             break
         elif cmd != "interactive":
-            router([""]+cmd.split())
+            router([""]+cmd.split(),wgmg)
 
 def router(arglist,wgmg):
     if arglist[1] == "interactive" :
@@ -106,7 +113,7 @@ def router(arglist,wgmg):
         wgmg.delete_wireguard_cert(arglist[2])
         wgmg.del_wireguard_host(arglist[2])
     elif arglist[1] == "deploy-conf":
-        wgmg.deploy_wireguard_configuration_routeros(arglist[2])
+        deploy_wireguard_configuration(wgmg)
     elif arglist[1] == "print_sitenames":
         print_sitenames(wgmg)
     elif arglist[1] == "create_site":
@@ -121,7 +128,7 @@ def router(arglist,wgmg):
         print_wireguard_exported_conf(arglist,wgmg)
 
 def launcher(wgmg):
-    listcmd = {"generate-cert":3,"delete-cert":3,"generate-conf":2,"deploy-conf":3,"print-exported-conf":3,"print-global-conf":2,"create_site":3,"delete_site":3,"change_current_site":3,"print_sitenames":2,"interactive":2}
+    listcmd = {"generate-cert":3,"delete-cert":3,"generate-conf":2,"deploy-conf":2,"print-exported-conf":3,"print-global-conf":2,"create_site":3,"delete_site":3,"change_current_site":3,"print_sitenames":2,"interactive":2}
     if len(sys.argv) < 2 or not sys.argv[1] in listcmd or not len(sys.argv)==listcmd[sys.argv[1]]:
         print(f"Usage: {__file__.split('/')[len(__file__.split('/'))-1]} OBJECT [name]")
         print(f"OBJECT :")

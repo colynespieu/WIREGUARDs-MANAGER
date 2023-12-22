@@ -181,22 +181,29 @@ class wgManagement:
         for ip_addr_wg in site_values["used_ips"]:
             if site_values["server"]["name"] == site_values["used_ips"][ip_addr_wg]:
                 return(ip_addr_wg)
+    
 
     def generate_conf_files(self):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")
         serv_cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['server']['name']}.json")
         for file in (os.listdir(f"{self.exports_path}{self.sitename}/")):
             os.remove(f"{self.exports_path}{self.sitename}/{file}")
+        env = Environment(loader=FileSystemLoader(self.templates_path))
+        list_peers = []
         for cert in site_values["used_ips"]:
-            address = (f"{cert}/{site_values['subnet'].split('/')[1]}")
-            client_cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['used_ips'][cert]}.json")
-            env = Environment(loader=FileSystemLoader(self.templates_path))
-            template = env.get_template("wireguard_client.conf.j2")
-            allowips=site_values['subnet']
-            for ip in site_values["client_allowed_ip"]:
-                allowips = f"{allowips},{ip}"
-            values={"address":address,"privateKey":client_cert_values["private_key"],"publicKey":serv_cert_values["public_key"],"allowIPs":allowips,"serverIP":site_values["server"]["IP"],"serverPort":site_values["server"]["port"]}
-            with io.open(f"{self.exports_path}/{self.sitename}/{site_values['used_ips'][cert]}.conf", 'w',encoding='utf8') as f:
-                f.write(template.render(value=values))
-
-
+            if (site_values["used_ips"][cert] != site_values["server"]["name"]):
+                address = (f"{cert}/{site_values['subnet'].split('/')[1]}")
+                client_cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['used_ips'][cert]}.json")
+                allowips=site_values['subnet']
+                for ip in site_values["client_allowed_ip"]:
+                    allowips = f"{allowips},{ip}"
+                values={"address":address,"privateKey":client_cert_values["private_key"],"publicKey":serv_cert_values["public_key"],"allowIPs":allowips,"serverIP":site_values["server"]["IP"],"serverPort":site_values["server"]["port"]}
+                list_peers.append({"ip":cert,"public_key":client_cert_values["public_key"]})
+                template = env.get_template("wireguard_client.conf.j2")
+                with io.open(f"{self.exports_path}/{self.sitename}/{site_values['used_ips'][cert]}.conf", 'w',encoding='utf8') as f:
+                    f.write(template.render(value=values))
+        address = (f"{site_values['server']['IP']}/{site_values['subnet'].split('/')[1]}")
+        values={"address":address,"privateKey":serv_cert_values["private_key"],"port":site_values["server"]["port"],"peers":list_peers}
+        template = env.get_template("wireguard_server.conf.j2")
+        with io.open(f"{self.exports_path}/{self.sitename}/{site_values['server']['name']}.conf", 'w',encoding='utf8') as f:
+            f.write(template.render(value=values))
