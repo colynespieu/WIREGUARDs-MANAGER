@@ -29,12 +29,14 @@ def create_config_file(sitename,gconf,wgmg):
         else:
             client_allowed_ip.append(tmp_client_allowed_ip)
     if (type == "routeros"):
-        ssh_port = str(input("Port SSH routeros (22) : ") or "22")
-        ssh_user = str(input("User SSH routeros (admin) : ") or "admin")
-        interface_name = str(input("Wireguard interface name (wireguard1) : ") or "wireguard1")
-        gconf["server"]["type_info"]["ssh_port"] = ssh_port
-        gconf["server"]["type_info"]["ssh_user"] = ssh_user
-        gconf["server"]["type_info"]["interface_name"] = interface_name
+        gconf["server"]["type_info"]["ssh_port"] = str(input("Port SSH routeros (22) : ") or "22")
+        gconf["server"]["type_info"]["ssh_user"] = str(input("User SSH routeros (admin) : ") or "admin")
+        gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wireguard1) : ") or "wireguard1")
+    if (type == "debian" or type == "redhat"):
+        gconf["server"]["type_info"]["ssh_port"] = str(input("Port SSH (22) : ") or "22")
+        gconf["server"]["type_info"]["ssh_user"] = str(input("User SSH (root) : ") or "root")
+        if gconf["server"]["type_info"]["ssh_user"] != "root":
+            gconf["server"]["type_info"]["su methode"] = str(input("sudo or su ? : ") or "sudo")
     gconf["subnet"] = subnet
     gconf["server"]["name"] = name
     gconf["server"]["IP"] = IP
@@ -67,6 +69,8 @@ def deploy_wireguard_configuration(wgmg):
     site_values = wgmg.json_file_read(f"{wgmg.sites_path}/{sitename}.json")
     if (site_values["server"]["type"] == "routeros"):
         wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS password : "))
+    if (site_values["server"]["type"] == "routeros"):
+        wgmg.deploy_wireguard_configuration_debian(getpass.getpass("Debian password : "))
     else:
         print(f"No deployment for type : {site_values['server']['type']}")
 

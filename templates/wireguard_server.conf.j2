@@ -6,6 +6,6 @@ PostUp =
 PostDown =
 {% for peer in value.peers %}
 [Peer]
-PublicKey = {{ peer["ip"] }}
-AllowedIPs = {{ peer["public_key"] }}
+PublicKey = {{ peer["public_key"] }}
+AllowedIPs = {{ peer["ip"] }}
 {% endfor %}

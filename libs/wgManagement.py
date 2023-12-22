@@ -111,6 +111,10 @@ class wgManagement:
         site_values["used_ips"].pop(todel, None)
         self.json_file_save(f"{self.sites_path}/{self.sitename}.json",site_values)
 
+    def deploy_wireguard_configuration_debian(self,password):
+        
+        pass
+
     def deploy_wireguard_configuration_routeros(self,password):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")
         cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['server']['name']}.json")
