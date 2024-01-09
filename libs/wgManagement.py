@@ -63,7 +63,7 @@ class wgManagement:
     def pass_command_ssh(self,username,password,host,port,command):
         try:
             sshClient = paramiko.SSHClient()
-            sshClient.load_system_host_keys()
+            sshClient.load_host_keys('~/.ssh/known_hosts')
             sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             sshClient.connect(host, port=port, username=username, password=password, allow_agent=False,look_for_keys=False)
             stdin,stdout,stderr = sshClient.exec_command(command)
@@ -112,8 +112,9 @@ class wgManagement:
         self.json_file_save(f"{self.sites_path}/{self.sitename}.json",site_values)
 
     def deploy_wireguard_configuration_debian(self,password):
-        
         pass
+
+    
 
     def deploy_wireguard_configuration_routeros(self,password):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")

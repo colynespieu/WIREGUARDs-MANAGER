@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/libs/")
 from wgManagement import wgManagement
 import ipadds
 
+
 def print_sitenames(wgmg):
     print(f"Current site : ")
     print(f"        {sitename}")
@@ -35,6 +36,7 @@ def create_config_file(sitename,gconf,wgmg):
     if (type == "debian" or type == "redhat"):
         gconf["server"]["type_info"]["ssh_port"] = str(input("Port SSH (22) : ") or "22")
         gconf["server"]["type_info"]["ssh_user"] = str(input("User SSH (root) : ") or "root")
+        gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wireguard1) : ") or "wireguard1")
         if gconf["server"]["type_info"]["ssh_user"] != "root":
             gconf["server"]["type_info"]["su methode"] = str(input("sudo or su ? : ") or "sudo")
     gconf["subnet"] = subnet
