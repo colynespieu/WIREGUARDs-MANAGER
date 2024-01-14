@@ -2,6 +2,7 @@ from warnings import filterwarnings
 filterwarnings("ignore")
 import os,subprocess,json,shutil,paramiko,ipaddress,re,io
 from jinja2 import Environment, FileSystemLoader
+from scp import SCPClient
 import ipadds
 
 class wgManagement:
@@ -60,17 +61,25 @@ class wgManagement:
         os.remove(f"{self.sites_path}/{sitename}.json")
         pass
 
-    def pass_command_ssh(self,username,password,host,port,command):
+    def pass_command_ssh(self,username,password,host,port,command,sshobj):
+        try:
+            stdin,stdout,stderr = sshobj.exec_command(command)
+            return(stdout.read().decode())
+        except:
+            return(None)
+    
+    def get_ssh_con(self,username,host,port,password=None):
         try:
             sshClient = paramiko.SSHClient()
-            sshClient.load_host_keys('~/.ssh/known_hosts')
+            sshClient.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
             sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            sshClient.connect(host, port=port, username=username, password=password, allow_agent=False,look_for_keys=False)
-            stdin,stdout,stderr = sshClient.exec_command(command)
-            toreturn = stdout.read().decode()
-        finally:
-            sshClient.close()
-        return(toreturn)
+            if password:
+                sshClient.connect(host, port=port, username=username, password=password, allow_agent=False,look_for_keys=False)
+            else:
+                sshClient.connect(host, port=port, username=username,look_for_keys=False)
+            return(sshClient)
+        except:
+            return(None)
 
     def generate_wireguard_cert(self,certname):
         if not os.path.exists(f"{self.certs_path}{self.sitename}/{certname}.json"):
@@ -112,18 +121,40 @@ class wgManagement:
         self.json_file_save(f"{self.sites_path}/{self.sitename}.json",site_values)
 
     def deploy_wireguard_configuration_debian(self,password):
-        pass
-
-    
+        site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")
+        username,host,port = site_values["server"]["type_info"]["ssh_user"],site_values["server"]["IP"],site_values["server"]["type_info"]["ssh_port"]
+        if (password):
+            sshobj=self.get_ssh_con(username,host,port,password)
+        else:
+            sshobj=self.get_ssh_con(username,host,port)
+        if (sshobj):
+            stdin,stdout,stderr = sshobj.exec_command(f"dpkg -s wireguard")
+            if (stdout.channel.recv_exit_status() == 1):
+                sshobj.exec_command(f"apt-get install -y wireguard")
+            scp = SCPClient(sshobj.get_transport())
+            scp.put(f"{self.exports_path}{self.sitename}/{site_values['server']['name']}.conf", f"/etc/wireguard/{site_values['server']['type_info']['interface_name']}.conf")
+            sshobj.exec_command(f"systemctl enable wg-quick@{site_values['server']['type_info']['interface_name']}")
+            stdin,stdout,stderr = sshobj.exec_command(f"systemctl restart wg-quick@{site_values['server']['type_info']['interface_name']}")
+            sshobj.close()
+            if (stdout.channel.recv_exit_status() == 1):
+                print("Erreur de déploiement")
+        else:
+            print("Erreur SSH")
 
     def deploy_wireguard_configuration_routeros(self,password):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")
         cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['server']['name']}.json")
         username,host,port = site_values["server"]["type_info"]["ssh_user"],site_values["server"]["IP"],site_values["server"]["type_info"]["ssh_port"]
+        if (password):
+            sshobj=self.get_ssh_con(username,host,port,password)
+        else:
+            sshobj=self.get_ssh_con(username,host,port)
+        if (not sshobj):
+            return()
         command = "/interface/wireguard/print detail"
-        interfaces_wireguard_print = self.pass_command_ssh(username,password,host,port,command)
+        interfaces_wireguard_print = self.pass_command_ssh(username,password,host,port,command,sshobj)
         command = f"/interface/wireguard/peers/print detail where interface=\"{site_values['server']['type_info']['interface_name']}\""
-        peers_wireguard_print = self.pass_command_ssh(username,password,host,port,command)
+        peers_wireguard_print = self.pass_command_ssh(username,password,host,port,command,sshobj)
         status=False
         for interface_wireguard_print in interfaces_wireguard_print.split("\r\n\r\n"):
             if self.find_arg_routeros_print(interface_wireguard_print,"name",site_values["server"]["type_info"]["interface_name"]):
@@ -142,38 +173,38 @@ class wgManagement:
                                 isaddr = self.find_arg_routeros_print(peer_wireguard,"allowed-address",f"{cert}/32")
                                 if (not isaddr):
                                     command = f"/interface/wireguard/peers/set allowed-address={cert}/32 [/interface/wireguard/peers/find public-key=\"{site_cert['public_key']}\"]"
-                                    self.pass_command_ssh(username,password,host,port,command)
+                                    self.pass_command_ssh(username,password,host,port,command,sshobj)
                         if (not peer_exist and peer_wireguard):
                             command = f"/interface/wireguard/peers/remove number={peer_wireguard.split()[0]}"
-                            self.pass_command_ssh(username,password,host,port,command)
+                            self.pass_command_ssh(username,password,host,port,command,sshobj)
                         elif (peer_exist and peer_wireguard):
                             listactivecert.append(peer_exist)
                     for cert in site_values["used_ips"]:
                         if (site_values["used_ips"][cert] != site_values["server"]["name"] and cert not in listactivecert):
                             site_cert = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['used_ips'][cert]}.json")
                             command = f"/interface/wireguard/peers/add allowed-address={cert}/32 public-key=\"{site_cert['public_key']}\" interface={site_values['server']['type_info']['interface_name']}"
-                            self.pass_command_ssh(username,password,host,port,command)
+                            self.pass_command_ssh(username,password,host,port,command,sshobj)
                 elif(not status):
                     status="toupdate"
             elif(not status):
                 status="toadd"
         if (status == "toupdate"):
             command=f"/interface/wireguard/set listen-port={site_values['server']['port']} private-key=\"{cert_values['private_key']}\" numbers={site_values['server']['type_info']['interface_name']}"
-            self.pass_command_ssh(username,password,host,port,command)
+            self.pass_command_ssh(username,password,host,port,command,sshobj)
             self.deploy_wireguard_configuration_routeros(password)
             return
         elif(status == "toadd"):
             command=f"/interface/wireguard/add listen-port={site_values['server']['port']} private-key=\"{cert_values['private_key']}\" name={site_values['server']['type_info']['interface_name']}"
-            self.pass_command_ssh(username,password,host,port,command)
+            self.pass_command_ssh(username,password,host,port,command,sshobj)
             self.deploy_wireguard_configuration_routeros(password)
             return
         serveur_wg_private_ip = self.get_server_private_ip(site_values)
         command=f"/ip/address/print detail where interface ={site_values['server']['type_info']['interface_name']} and address=\"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}\""
-        ip_addr_list_print = self.pass_command_ssh(username,password,host,port,command)
+        ip_addr_list_print = self.pass_command_ssh(username,password,host,port,command,sshobj)
         for ip_addr_print in ip_addr_list_print.split("\r\n\r\n"):
             if not self.find_arg_routeros_print(ip_addr_print,"address",f"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}"):
                 command=f"/ip/address/add interface={site_values['server']['type_info']['interface_name']} address=\"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}\""
-                self.pass_command_ssh(username,password,host,port,command)
+                self.pass_command_ssh(username,password,host,port,command,sshobj)
 
     def find_arg_routeros_print(self,printv,valuename,value):
         for arg in printv.split():
@@ -187,7 +218,6 @@ class wgManagement:
             if site_values["server"]["name"] == site_values["used_ips"][ip_addr_wg]:
                 return(ip_addr_wg)
     
-
     def generate_conf_files(self):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")
         serv_cert_values = self.json_file_read(f"{self.certs_path}/{self.sitename}/{site_values['server']['name']}.json")

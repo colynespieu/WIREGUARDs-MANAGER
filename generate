@@ -21,7 +21,7 @@ def create_config_file(sitename,gconf,wgmg):
     name = str(input("Server name (default_router) : ") or "default_router")
     IP = str(input("Server public IP (185.62.2.1) : ") or "185.62.2.1")
     port = str(input("Wireguard port (51820) : ") or "51820")
-    type = str(input("Wireguard Server os type (routeros) : ") or "routeros")
+    type = str(input("Wireguard Server os type (routeros, debian or manual) : ") or "manual")
     client_allowed_ip = []
     while True:
         tmp_client_allowed_ip = input("Enter a subnet accessible via the VPN (example : 192.168.1.0/24) :") or False
@@ -36,7 +36,7 @@ def create_config_file(sitename,gconf,wgmg):
     if (type == "debian" or type == "redhat"):
         gconf["server"]["type_info"]["ssh_port"] = str(input("Port SSH (22) : ") or "22")
         gconf["server"]["type_info"]["ssh_user"] = str(input("User SSH (root) : ") or "root")
-        gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wireguard1) : ") or "wireguard1")
+        gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wg0) : ") or "wg0")
         if gconf["server"]["type_info"]["ssh_user"] != "root":
             gconf["server"]["type_info"]["su methode"] = str(input("sudo or su ? : ") or "sudo")
     gconf["subnet"] = subnet
@@ -70,9 +70,9 @@ def print_wireguard_values(wgmg):
 def deploy_wireguard_configuration(wgmg):
     site_values = wgmg.json_file_read(f"{wgmg.sites_path}/{sitename}.json")
     if (site_values["server"]["type"] == "routeros"):
-        wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS password : "))
-    if (site_values["server"]["type"] == "routeros"):
-        wgmg.deploy_wireguard_configuration_debian(getpass.getpass("Debian password : "))
+        wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS SSH password (Empty for key authentification) : "))
+    elif (site_values["server"]["type"] == "debian"):
+        wgmg.deploy_wireguard_configuration_debian(getpass.getpass("SSH password (Empty for key authentification) : ") or None)
     else:
         print(f"No deployment for type : {site_values['server']['type']}")
 
@@ -80,7 +80,7 @@ def print_option():
     print(f"        generate-cert [name]")
     print(f"        delete-cert [name]")
     print(f"        generate-conf")
-    print(f"        deploy-conf [password]")
+    print(f"        deploy-conf")
     print(f"        print-exported-conf [name]")
     print(f"        print-global-conf")
     print(f"        create_site [name]")
