@@ -3,6 +3,7 @@
 Debian >= 10 
 Ubuntu >= 18.04
 Centos / Fedora (?) untested
+
 RouterOs need at least version 7 for wireguard configuration ...
 
 # Dependencies :
