@@ -140,6 +140,9 @@ class wgManagement:
                 print("Erreur de déploiement")
         else:
             print("Erreur SSH")
+            
+    def deploy_wireguard_configuration_edgeos(self,password):
+        pass
 
     def deploy_wireguard_configuration_routeros(self,password):
         site_values = self.json_file_read(f"{self.sites_path}/{self.sitename}.json")

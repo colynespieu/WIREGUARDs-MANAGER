@@ -1,0 +1,17 @@
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper begin
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper configure
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 address {{ value.address }}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 listen-port {{ value.port }}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 route-allowed-ips true
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 private-key {{ value.privateKey }}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit
+{% for peer in value.peers %}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= endpoint {{ peer["public_key"] }}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= persistent-keepalive 15
+{% for allowedIP in peer["ip"] %}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= allowed-ips {{ allowedIP }}
+{% endfor %}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit
+{% endfor %}
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper save
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper end

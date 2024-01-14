@@ -5,4 +5,4 @@ exports/*
 sites/*
 !sites/.gitkeep
 conf.json
-libs/__pycache__/*
+libs/__pycache__/

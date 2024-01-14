@@ -70,7 +70,9 @@ def print_wireguard_values(wgmg):
 def deploy_wireguard_configuration(wgmg):
     site_values = wgmg.json_file_read(f"{wgmg.sites_path}/{sitename}.json")
     if (site_values["server"]["type"] == "routeros"):
-        wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS SSH password (Empty for key authentification) : "))
+        wgmg.deploy_wireguard_configuration_routeros(getpass.getpass("RouterOS SSH password (Empty for key authentification) : ") or None)
+    elif (site_values["server"]["type"] == "edgeos"):
+        wgmg.deploy_wireguard_configuration_edgeos(getpass.getpass("Edgeos SSH password (Empty for key authentification) : ") or None)
     elif (site_values["server"]["type"] == "debian"):
         wgmg.deploy_wireguard_configuration_debian(getpass.getpass("SSH password (Empty for key authentification) : ") or None)
     else:
