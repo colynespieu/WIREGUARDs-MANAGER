@@ -192,11 +192,13 @@ class wgManagement:
             command=f"/interface/wireguard/set listen-port={site_values['server']['port']} private-key=\"{cert_values['private_key']}\" numbers={site_values['server']['type_info']['interface_name']}"
             self.pass_command_ssh(username,password,host,port,command,sshobj)
             self.deploy_wireguard_configuration_routeros(password)
+            sshobj.close()
             return
         elif(status == "toadd"):
             command=f"/interface/wireguard/add listen-port={site_values['server']['port']} private-key=\"{cert_values['private_key']}\" name={site_values['server']['type_info']['interface_name']}"
             self.pass_command_ssh(username,password,host,port,command,sshobj)
             self.deploy_wireguard_configuration_routeros(password)
+            sshobj.close()
             return
         serveur_wg_private_ip = self.get_server_private_ip(site_values)
         command=f"/ip/address/print detail where interface ={site_values['server']['type_info']['interface_name']} and address=\"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}\""
@@ -205,6 +207,7 @@ class wgManagement:
             if not self.find_arg_routeros_print(ip_addr_print,"address",f"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}"):
                 command=f"/ip/address/add interface={site_values['server']['type_info']['interface_name']} address=\"{serveur_wg_private_ip}/{site_values['subnet'].split('/')[1]}\""
                 self.pass_command_ssh(username,password,host,port,command,sshobj)
+        sshobj.close()
 
     def find_arg_routeros_print(self,printv,valuename,value):
         for arg in printv.split():
@@ -237,8 +240,12 @@ class wgManagement:
                 template = env.get_template("wireguard_client.conf.j2")
                 with io.open(f"{self.exports_path}/{self.sitename}/{site_values['used_ips'][cert]}.conf", 'w',encoding='utf8') as f:
                     f.write(template.render(value=values))
-        address = (f"{site_values['server']['IP']}/{site_values['subnet'].split('/')[1]}")
+        for address in site_values['used_ips']:
+            if (site_values['used_ips'][address] == site_values["server"]["name"]):
+                address = (f"{address}/{site_values['subnet'].split('/')[1]}")
+                break
         values={"address":address,"privateKey":serv_cert_values["private_key"],"port":site_values["server"]["port"],"peers":list_peers}
+        print(values)
         template = env.get_template("wireguard_server.conf.j2")
         with io.open(f"{self.exports_path}/{self.sitename}/{site_values['server']['name']}.conf", 'w',encoding='utf8') as f:
             f.write(template.render(value=values))
