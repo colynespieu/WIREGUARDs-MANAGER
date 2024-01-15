@@ -48,7 +48,7 @@ pip3 install jinja2 scp ipaddress
 ```
 
 ##### Print generated config file :
-```
+```bash
 /generate print-exported-conf "clientname"
 ```
 
