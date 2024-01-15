@@ -1,11 +1,11 @@
 # WIREGUARDs-MANAGER
 
-#### * Can be installed on  :
+#### Can be installed on  :
 * Debian >= 10 
 * Ubuntu >= 18.04
 * Centos / Fedora (?) untested
 
-#### * Can be deployed on  :
+#### Can be deployed on  :
 
 * RouterOs need at least version 7 for wireguard configuration ...
 * Debian >= 10
@@ -19,45 +19,45 @@ pip3 install jinja2 scp ipaddress
 ```
 
 # Usages :
-##### * Create a site :
+##### Create a site :
 ```bash
 ./generate create_site "sitename"
 ```
 
-##### * Select a site :
+##### Select a site :
 ```bash
 ./generate print_sitenames
 ./generate change_current_site "sitename"
 ```
 
-##### * Add a client (peer) :
+##### Add a client (peer) :
 ```bash
 ./generate generate-cert "clientname"
 ./generate generate-conf
 ```
 
-##### * Delete a client (peer) :
+##### Delete a client (peer) :
 ```bash
 ./generate delete-cert "clientname"
 ./generate generate-conf
 ```
 
-##### * Deploy the master :
+##### Deploy the master :
 ```bash
 ./generate deploy-conf
 ```
 
-##### * Print generated config file :
+##### Print generated config file :
 ```
 /generate print-exported-conf "clientname"
 ```
 
-##### * Print global config :
+##### Print global config :
 ```bash
 ./generate print-global-conf
 ```
 
-##### * Interactive mode :
+##### Interactive mode :
 ```bash
 ./generate print-global-conf
 ```
