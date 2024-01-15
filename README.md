@@ -1,6 +1,6 @@
 # WIREGUARDs-MANAGER
 
-####* Can be installed on  :
+#### * Can be installed on  :
 * Debian >= 10 
 * Ubuntu >= 18.04
 * Centos / Fedora (?) untested
