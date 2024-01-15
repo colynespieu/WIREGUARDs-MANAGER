@@ -8,7 +8,7 @@
 {% for peer in value.peers %}
 /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= endpoint {{ peer["public_key"] }}
 /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= persistent-keepalive 15
-{% for allowedIP in peer["ip"] %}
+{% for allowedIP in peer["allowedIP"] %}
 /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces wireguard wg0 peer BJ...dz= allowed-ips {{ allowedIP }}
 {% endfor %}
 /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit
