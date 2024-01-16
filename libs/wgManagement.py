@@ -71,6 +71,10 @@ class wgManagement:
     def get_ssh_con(self,username,host,port,password=None):
         try:
             sshClient = paramiko.SSHClient()
+            if not os.path.exists('~/.ssh/known_hosts'):
+                os.makedirs(os.path.dirname('~/.ssh/known_hosts'), exist_ok=True)
+                fp = open('~/.ssh/known_hosts', 'x')
+                fp.close()
             sshClient.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
             sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if password:
@@ -248,7 +252,6 @@ class wgManagement:
                 address = (f"{address}/{site_values['subnet'].split('/')[1]}")
                 break
         values={"address":address,"privateKey":serv_cert_values["private_key"],"port":site_values["server"]["port"],"peers":list_peers}
-        print(values)
         template = env.get_template("wireguard_server.conf.j2")
         with io.open(f"{self.exports_path}/{self.sitename}/{site_values['server']['name']}.conf", 'w',encoding='utf8') as f:
             f.write(template.render(value=values))

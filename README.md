@@ -7,9 +7,9 @@
 
 #### Can be deployed on  :
 
-* RouterOs need at least version 7 for wireguard configuration ...
+* RouterOs (need at least version 7 for wireguard configuration ...)
 * Debian >= 10
-* Ubuntu >= 18.04 (type debian)
+* Ubuntu >= 18.04 (Choose debian)
 
 # Dependencies :
 Ubuntu / Debian :
@@ -42,7 +42,7 @@ pip3 install jinja2 scp ipaddress
 ./generate generate-conf
 ```
 
-##### Deploy the master :
+##### Deploy the server :
 ```bash
 ./generate deploy-conf
 ```
@@ -59,5 +59,5 @@ pip3 install jinja2 scp ipaddress
 
 ##### Interactive mode :
 ```bash
-./generate print-global-conf
+./generate interactive
 ```
