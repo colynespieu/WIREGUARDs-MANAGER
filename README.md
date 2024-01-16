@@ -14,8 +14,28 @@
 # Dependencies :
 Ubuntu / Debian :
 ```bash
-apt install python3-pip wireguard-tools python3-simplejson python3-paramiko
+apt install python3-pip wireguard-tools python3-simplejson python3-paramiko git
 pip3 install jinja2 scp ipaddress
+```
+
+Centos :
+```bash
+yum install elrepo-release epel-release
+yum install python3 openssl-devel git python3-devel libevent-devel libffi-devel wireguard-tools
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > ./sh.rustup.rs
+chmod +x sh.rustup.rs 
+./sh.rustup.rs
+
+pip3 install --upgrade pip
+pip3 install setuptools-rust wheel Jinja2 paramiko scp
+```
+
+# Install :
+```bash
+git clone https://github.com/colynespieu/WIREGUARDs-MANAGER.git
+cd WIREGUARDs-MANAGER/
+cp conf.json.sample conf.json
 ```
 
 # Usages :
