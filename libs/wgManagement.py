@@ -71,11 +71,11 @@ class wgManagement:
     def get_ssh_con(self,username,host,port,password=None):
         try:
             sshClient = paramiko.SSHClient()
-            if not os.path.exists('~/.ssh/known_hosts'):
-                os.makedirs(os.path.dirname('~/.ssh/known_hosts'), exist_ok=True)
-                fp = open('~/.ssh/known_hosts', 'x')
+            if not os.path.exists(f"{os.path.expanduser('~')}/.ssh/known_hosts"):
+                os.makedirs(os.path.dirname(f"{os.path.expanduser('~')}/.ssh/known_hosts"), exist_ok=True)
+                fp = open(f"{os.path.expanduser('~')}/.ssh/known_hosts", 'w')
                 fp.close()
-            sshClient.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
+            sshClient.load_host_keys(os.path.expanduser(f"{os.path.expanduser('~')}/.ssh/known_hosts"))
             sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if password:
                 sshClient.connect(host, port=port, username=username, password=password, allow_agent=False,look_for_keys=False)
