@@ -80,7 +80,7 @@ class wgManagement:
             if password:
                 sshClient.connect(host, port=port, username=username, password=password, allow_agent=False,look_for_keys=False)
             else:
-                sshClient.connect(host, port=port, username=username,look_for_keys=False)
+                sshClient.connect(host, port=port, username=username)
             return(sshClient)
         except:
             return(None)
