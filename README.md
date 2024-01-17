@@ -3,7 +3,8 @@
 #### Can be installed on  :
 * Debian >= 10 
 * Ubuntu >= 18.04
-* Centos / Fedora (?) untested
+* Centos 7 
+* Fedora (?) untested
 
 #### Can be deployed on  :
 
@@ -18,7 +19,7 @@ apt install python3-pip wireguard-tools python3-simplejson python3-paramiko git
 pip3 install jinja2 scp ipaddress
 ```
 
-Centos :
+Centos 7 :
 ```bash
 yum install elrepo-release epel-release
 yum install python3 openssl-devel git python3-devel libevent-devel libffi-devel wireguard-tools
