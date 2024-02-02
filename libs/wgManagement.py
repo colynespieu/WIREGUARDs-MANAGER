@@ -141,7 +141,7 @@ class wgManagement:
             stdin,stdout,stderr = sshobj.exec_command(f"systemctl restart wg-quick@{site_values['server']['type_info']['interface_name']}")
             sshobj.close()
             if (stdout.channel.recv_exit_status() == 1):
-                print("Erreur de déploiement")
+                print("Deployment Error")
         else:
             print("Erreur SSH")
             

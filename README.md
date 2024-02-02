@@ -1,7 +1,12 @@
 # WIREGUARDs-MANAGER
 
-#### Can be installed on  :
-* Debian >= 10 
+This software is for manage and deploy some Wireguard VPN in client / Server mode.
+It work with a system of sites, each site have his main Wireguard server and can have clients.
+Warning, all the wireguard keys (publics and Private) are readable, so please at least encrypt this folder ...
+Still in development, a lot of things are still unavailable and some others will be corrected.
+
+#### Can be used from  :
+* Debian >= 10
 * Ubuntu >= 18.04
 * Centos 7 
 * Fedora (?) untested
@@ -78,7 +83,7 @@ cp conf.json.sample conf.json
 ./generate print-global-conf
 ```
 
-##### Interactive mode :
+##### Interactive mode (for not always use ./generate in your commands):
 ```bash
 ./generate interactive
 ```
