@@ -1,0 +1,11 @@
+begin
+set interfaces wireguard wg0 address {{ value.address }}
+set interfaces wireguard wg0 listen-port {{ value.port }}
+set interfaces wireguard wg0 route-allowed-ips true
+set interfaces wireguard wg0 private-key {{ value.privateKey }}
+commit
+{% for peer in value.peers %}set interfaces wireguard wg0 peer {{ peer["public_key"] }} persistent-keepalive 15
+set interfaces wireguard wg0 peer {{ peer["public_key"] }} allowed-ips {{ peer["ip"] }}
+commit
+{% endfor %}save
+end

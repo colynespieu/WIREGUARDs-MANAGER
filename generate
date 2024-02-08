@@ -21,7 +21,7 @@ def create_config_file(sitename,gconf,wgmg):
     name = str(input("Server name (default_router) : ") or "default_router")
     IP = str(input("Server public IP (185.62.2.1) : ") or "185.62.2.1")
     port = str(input("Wireguard port (51820) : ") or "51820")
-    type = str(input("Wireguard Server os type (routeros, debian or manual) : ") or "manual")
+    type = str(input("Wireguard Server os type (routeros, debian, edgeos or manual) : ") or "manual")
     client_allowed_ip = []
     while True:
         tmp_client_allowed_ip = input("Enter a subnet accessible via the VPN (example : 192.168.1.0/24) :") or False
@@ -39,6 +39,17 @@ def create_config_file(sitename,gconf,wgmg):
         gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wg0) : ") or "wg0")
         if gconf["server"]["type_info"]["ssh_user"] != "root":
             gconf["server"]["type_info"]["su methode"] = str(input("sudo or su ? : ") or "sudo")
+    if (type == "edgeos"):
+        gconf["server"]["type_info"]["ssh_port"] = str(input("Port SSH edgeos (22) : ") or "22")
+        gconf["server"]["type_info"]["ssh_user"] = str(input("User SSH edgeos (ubnt) : ") or "ubnt")
+        gconf["server"]["type_info"]["interface_name"] = str(input("Wireguard interface name (wg0) : ") or "wg0")
+        gconf["server"]["type_info"]["device"]=""
+        while gconf["server"]["type_info"]["device"] not in ["E50","E100","E200","E300","E1000"]:
+            print("E50: EdgeRouter X        E100: EdgeRouter Lite   E200: EdgeRouter 8      E300: EdgeRouter 4")
+            print("E50: EdgeRouter X SFP    E100: EdgeRouter PoE    E200: EdgeRouter Pro    E300: EdgeRouter 6P")
+            print("                         E1000: EdgeRouter Infinity                      E300: EdgeRouter 12")
+            gconf["server"]["type_info"]["device"] = str(input("Choose the model (example : E50) : ") or "")
+        gconf["server"]["type_info"]["os_version"] = str(input("Edgeos Version (v1 or v2) : ") or "v2")
     gconf["subnet"] = subnet
     gconf["server"]["name"] = name
     gconf["server"]["IP"] = IP

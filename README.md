@@ -16,12 +16,13 @@ Still in development, a lot of things are still unavailable and some others will
 * RouterOs (need at least version 7 for wireguard configuration ...)
 * Debian >= 10
 * Ubuntu >= 18.04 (Choose debian)
+* Edgeos >= v1 and v2 (need Internet on your computer to download packages)
 
 # Dependencies :
 Ubuntu / Debian :
 ```bash
 apt install python3-pip wireguard-tools python3-simplejson python3-paramiko git
-pip3 install jinja2 scp ipaddress
+pip3 install jinja2 scp ipaddress wget
 ```
 
 Centos 7 :
@@ -34,7 +35,7 @@ chmod +x sh.rustup.rs
 ./sh.rustup.rs
 
 pip3 install --upgrade pip
-pip3 install setuptools-rust wheel Jinja2 paramiko scp
+pip3 install setuptools-rust wheel Jinja2 paramiko scp wget
 ```
 
 # Install :
